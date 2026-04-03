@@ -1,0 +1,1077 @@
+<%- include('layout', { title: 'EVE HyperNet Калькулятор', body: `
+  <div class="bg-zinc-900 rounded-3xl p-6 shadow-2xl">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #3a0000;
+      }
+
+      .tab-btn {
+        background: #1a0000;
+        border: 1px solid #3a0000;
+        border-bottom: none;
+        color: #888;
+        padding: 10px 24px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        border-radius: 6px 6px 0 0;
+        transition: all 0.2s;
+        letter-spacing: 0.5px;
+      }
+
+      .tab-btn:hover { color: #ff4444; border-color: #660000; }
+      .tab-btn.active { background: #2a0000; color: #ff3333; border-color: #660000; font-weight: 700; }
+
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+
+      .card {
+        background: #111111;
+        border: 1px solid #3a0000;
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+      }
+
+      .section-title {
+        color: #ff3333;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .input-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+      }
+
+      .field label {
+        display: block;
+        font-size: 0.78rem;
+        color: #999;
+        margin-bottom: 5px;
+      }
+
+      .field input, .field select {
+        width: 100%;
+        background: #1a0000;
+        border: 1px solid #5a0000;
+        border-radius: 4px;
+        color: #ff6666;
+        font-size: 0.95rem;
+        padding: 8px 10px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .field input:focus, .field select:focus {
+        border-color: #ff2222;
+        box-shadow: 0 0 6px #ff000044;
+      }
+
+      .field select option { background: #1a0000; color: #ff6666; }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .stat-box {
+        background: #1a0000;
+        border: 1px solid #3a0000;
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+
+      .stat-box .stat-label { font-size: 0.68rem; color: #888; margin-bottom: 4px; }
+      .stat-box .stat-val { font-size: 0.97rem; font-weight: 700; color: #ff4444; }
+
+      .result-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+
+      .result-table th {
+        color: #777;
+        font-weight: 500;
+        text-align: right;
+        padding: 8px 10px;
+        border-bottom: 1px solid #2a0000;
+        font-size: 0.75rem;
+        white-space: nowrap;
+      }
+
+      .result-table th:first-child { text-align: left; }
+
+      .result-table td {
+        text-align: right;
+        padding: 10px 10px;
+        color: #cc4444;
+        border-bottom: 1px solid #1e0000;
+        white-space: nowrap;
+      }
+
+      .result-table td:first-child { text-align: left; color: #ff5555; font-weight: 700; }
+      .result-table tr:last-child td { border-bottom: none; }
+
+      .profit-pos { color: #44ff88 !important; }
+      .profit-neg { color: #ff2222 !important; font-weight: 700; }
+      .profit-neg-box { border: 2px solid #ff2222; border-radius: 4px; padding: 2px 6px; }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 14px;
+      }
+
+      .summary-box {
+        background: #1a0000;
+        border: 1px solid #3a0000;
+        border-radius: 6px;
+        padding: 14px 16px;
+      }
+
+      .summary-box .s-label { font-size: 0.72rem; color: #888; margin-bottom: 6px; }
+      .summary-box .s-val { font-size: 1.1rem; font-weight: 700; color: #ff4444; }
+
+      .btn-save {
+        background: linear-gradient(135deg, #6a0000, #aa0000);
+        border: 1px solid #ff2222;
+        color: #fff;
+        padding: 11px 28px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+        margin-top: 4px;
+      }
+
+      .btn-save:hover { background: linear-gradient(135deg, #aa0000, #dd0000); box-shadow: 0 0 12px #ff000066; }
+
+      .btn-danger {
+        background: transparent;
+        border: 1px solid #660000;
+        color: #ff4444;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        transition: all 0.15s;
+      }
+
+      .btn-danger:hover { border-color: #ff2222; background: #2a0000; }
+
+      .stat-filters {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+
+      .stat-filters label { font-size: 0.82rem; color: #999; }
+
+      .stat-filters select, .stat-filters input {
+        background: #1a0000;
+        border: 1px solid #5a0000;
+        border-radius: 4px;
+        color: #ff6666;
+        padding: 7px 10px;
+        font-size: 0.88rem;
+        outline: none;
+      }
+
+      .filter-btn {
+        background: #2a0000;
+        border: 1px solid #660000;
+        color: #ff4444;
+        padding: 7px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.15s;
+      }
+
+      .filter-btn.active, .filter-btn:hover { background: #440000; border-color: #ff2222; color: #ff6666; }
+
+      .lots-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+
+      .lots-table th {
+        color: #777;
+        font-size: 0.72rem;
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid #2a0000;
+        white-space: nowrap;
+      }
+
+      .lots-table td {
+        padding: 9px 10px;
+        border-bottom: 1px solid #1a0000;
+        color: #cc4444;
+        white-space: nowrap;
+      }
+
+      .lots-table tr:hover td { background: #1a0000; }
+      .lots-table tr:last-child td { border-bottom: none; }
+      .lots-table td:first-child { color: #ff6666; }
+
+      .empty-msg { text-align: center; color: #555; padding: 40px; font-size: 0.9rem; }
+
+      .total-row td { font-weight: 700; color: #ff3333 !important; border-top: 1px solid #440000; }
+
+      .badge-win { color: #44ff88; }
+      .badge-lose { color: #ff4444; }
+      .badge-avg { color: #ffaa44; }
+      .badge-pending { color: #ffcc00; }
+
+      .rebate-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+      .rebate-table th { color: #777; font-size: 0.74rem; padding: 7px 10px; border-bottom: 1px solid #2a0000; text-align: left; white-space: nowrap; }
+      .rebate-table td { padding: 7px 8px; border-bottom: 1px solid #1a0000; vertical-align: middle; }
+      .rebate-table tr:last-child td { border-bottom: none; }
+      .rebate-table input[type="text"],
+      .rebate-table input[type="number"] {
+        background: #1a0000; border: 1px solid #4a0000; border-radius: 4px;
+        color: #ff8888; padding: 5px 8px; font-size: 0.85rem; outline: none; width: 100%;
+      }
+      .rebate-table input:focus { border-color: #ff2222; }
+      .rebate-amount { color: #ffaa44; font-weight: 600; white-space: nowrap; }
+
+      .modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: #000000cc; z-index: 1000; align-items: center; justify-content: center;
+      }
+      .modal-overlay.open { display: flex; }
+      .modal-box {
+        background: #111; border: 1px solid #660000; border-radius: 10px;
+        padding: 28px 32px; min-width: 360px; max-width: 500px; width: 90%;
+        box-shadow: 0 0 40px #ff000033;
+      }
+      .modal-title { color: #ff3333; font-size: 1rem; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; }
+      .modal-field { margin-bottom: 16px; }
+      .modal-field label { display: block; font-size: 0.78rem; color: #999; margin-bottom: 6px; }
+      .modal-field select, .modal-field input {
+        width: 100%; background: #1a0000; border: 1px solid #5a0000; border-radius: 4px;
+        color: #ff6666; font-size: 0.95rem; padding: 9px 12px; outline: none;
+      }
+      .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+      .btn-modal-save {
+        background: linear-gradient(135deg, #6a0000, #aa0000); border: 1px solid #ff2222;
+        color: #fff; padding: 9px 22px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 700;
+      }
+      .btn-modal-cancel {
+        background: transparent; border: 1px solid #440000; color: #888;
+        padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+      }
+      .btn-modal-cancel:hover { border-color: #880000; color: #ccc; }
+      .btn-edit {
+        background: transparent; border: 1px solid #440000; color: #ff6666;
+        padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem; transition: all 0.15s;
+      }
+      .btn-edit:hover { border-color: #ff2222; background: #2a0000; }
+
+      .stat-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .scroll-x { overflow-x: auto; }
+
+      .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #220000;
+        border: 1px solid #ff2222;
+        color: #ff5555;
+        padding: 12px 22px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        z-index: 999;
+      }
+
+      .toast.show { opacity: 1; }
+    </style>
+
+    <div class="container mx-auto">
+      <h1 class="text-center text-4xl font-bold text-red-500 mb-8">EVE HyperNet Калькулятор</h1>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('calc')">Калькулятор</button>
+        <button class="tab-btn" onclick="switchTab('stats')">Статистика</button>
+      </div>
+
+      <!-- ===================== КАЛЬКУЛЯТОР ===================== -->
+      <div id="tab-calc" class="tab-panel active">
+
+        <div class="card">
+          <div class="section-title">Вхідні параметри</div>
+          <div class="input-grid">
+            <div class="field" style="grid-column: span 2;">
+              <label>Назва предмета</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="itemName" placeholder="напр. PLEX" style="flex:1;" oninput="onItemNameInput()">
+                <button class="btn-save" id="jitaBtn" onclick="fetchJitaPrice()" style="padding:8px 14px;font-size:0.82rem;white-space:nowrap;margin-top:0;">Jita ціна</button>
+              </div>
+              <div id="jitaStatus" style="font-size:0.75rem;margin-top:5px;min-height:16px;color:#777;"></div>
+              <div id="jitaSuggestions" style="position:relative;"></div>
+            </div>
+            <div class="field">
+              <label>Ціна предмета (ISK)</label>
+              <input type="number" id="itemPrice" value="45000000000">
+            </div>
+            <div class="field">
+              <label>Загальна вартість продажу (ISK)</label>
+              <input type="number" id="totalSellValue" value="120000000000">
+            </div>
+            <div class="field">
+              <label>Ціна <strong>одного</strong> HyperCore (ISK) <span style="color:#666;font-weight:normal;">~350,000–500,000</span></label>
+              <input type="number" id="hypercorePrice" value="380000" placeholder="напр. 380000">
+            </div>
+            <div class="field">
+              <label>Кількість квитків</label>
+              <select id="numTickets">
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="16">16</option>
+                <option value="32">32</option>
+                <option value="64">64</option>
+                <option value="128">128</option>
+                <option value="256">256</option>
+                <option value="512" selected>512</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Власних куплених квитків</label>
+              <input type="number" id="selfTickets" value="412">
+            </div>
+            <div class="field">
+              <label>Кількість запусків</label>
+              <input type="number" id="numRuns" value="1" min="1">
+            </div>
+            <div class="field">
+              <label>Результат лота</label>
+              <select id="lotResult">
+                <option value="none">— не вибрано —</option>
+                <option value="pending">В очікуванні (лот ще активний)</option>
+                <option value="win">Виграв (я виграв предмет)</option>
+                <option value="lose">Програв (хтось інший виграв)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Ребейт (виплата при виграші)</div>
+          <div style="font-size:0.8rem;color:#777;margin-bottom:14px;">Ребейт враховується тільки в сценарії "Якщо виграєте" та "Середнє".</div>
+          <table class="rebate-table" id="rebateTable">
+            <thead>
+              <tr>
+                <th>Нік гравця</th>
+                <th>Кількість квитків</th>
+                <th>Відсоток (%)</th>
+                <th>Сума ребейту</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rebateBody"></tbody>
+          </table>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:12px;flex-wrap:wrap;">
+            <button class="filter-btn" onclick="addRebateRow()">+ Додати ребейт</button>
+            <div id="rebateTotal" style="color:#ffaa44;font-size:0.88rem;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Аналіз за запуск</div>
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="scroll-x">
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Вартість предмета</th>
+                  <th>Власні квитки</th>
+                  <th>HyperCores</th>
+                  <th>Ребейт</th>
+                  <th>Всього витрат</th>
+                  <th>Чистий дохід</th>
+                  <th>Предмет повернено</th>
+                  <th>Всього отримано</th>
+                  <th>Прибуток/Збиток</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Очікуване середнє за запуски</div>
+          <div class="summary-grid" id="summaryGrid"></div>
+          <div style="margin-top:18px;">
+            <button class="btn-save" onclick="saveLot()">Зберегти лот</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================== СТАТИСТИКА ===================== -->
+      <div id="tab-stats" class="tab-panel">
+
+        <div class="card">
+          <div class="section-title">Фільтр</div>
+          <div class="stat-filters">
+            <button class="filter-btn active" id="btn-all" onclick="setFilter('all')">Весь час</button>
+            <button class="filter-btn" id="btn-month" onclick="setFilter('month')">За місяць</button>
+            <div id="month-picker" style="display:none; gap:8px; align-items:center; display:none;">
+              <label>Місяць:</label>
+              <input type="month" id="monthPicker" onchange="renderStats()">
+            </div>
+          </div>
+          <div class="stat-summary-grid" id="statSummaryCards"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Збережені лоти</div>
+          <div class="scroll-x">
+            <table class="lots-table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Предмет</th>
+                  <th>Квитки</th>
+                  <th>Власних</th>
+                  <th>Шанс виграшу</th>
+                  <th>Витрати</th>
+                  <th>Чистий дохід</th>
+                  <th>Ребейти</th>
+                  <th>Результат</th>
+                  <th>Прибуток/Збиток</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="lotsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Edit modal -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-box" style="max-width:620px;">
+        <div class="modal-title">Редагувати лот</div>
+        <div class="modal-field">
+          <label>Назва предмета</label>
+          <input type="text" id="m_itemName">
+        </div>
+        <div class="modal-field">
+          <label>Статус лота</label>
+          <select id="m_lotResult">
+            <option value="none">— не вибрано —</option>
+            <option value="pending">В очікуванні</option>
+            <option value="win">Виграв</option>
+            <option value="lose">Програв</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label style="margin-bottom:8px;display:block;">Ребейти</label>
+          <table class="rebate-table" style="margin-bottom:8px;">
+            <thead>
+              <tr>
+                <th>Нік гравця</th>
+                <th>Квитків</th>
+                <th>%</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="m_rebateBody"></tbody>
+          </table>
+          <button class="filter-btn" style="font-size:0.8rem;padding:5px 12px;" onclick="addModalRebateRow()">+ Додати</button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" onclick="closeModal()">Скасувати</button>
+          <button class="btn-modal-save" onclick="saveModalEdit()">Зберегти</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const HC_FIXED_PRICE = 430000;
+
+      function calcHC(totalSellValue) {
+        return Math.round(totalSellValue * 0.05 / HC_FIXED_PRICE);
+      }
+
+      function fmt(val) {
+        const abs = Math.abs(val);
+        let str;
+        if (abs >= 1e12) str = (val / 1e12).toFixed(2) + 'T';
+        else if (abs >= 1e9) str = (val / 1e9).toFixed(2) + 'B';
+        else if (abs >= 1e6) str = (val / 1e6).toFixed(2) + 'M';
+        else if (abs >= 1e3) str = (val / 1e3).toFixed(2) + 'K';
+        else str = val.toFixed(0);
+        return str;
+      }
+
+      function pct(val) { return (val * 100).toFixed(2) + '%'; }
+
+      function getCalcData() {
+        const itemPrice    = parseFloat(document.getElementById('itemPrice').value) || 0;
+        const totalSell    = parseFloat(document.getElementById('totalSellValue').value) || 0;
+        const hcPrice      = parseFloat(document.getElementById('hypercorePrice').value) || 0;
+        const numTickets   = parseInt(document.getElementById('numTickets').value) || 512;
+        const selfT        = parseFloat(document.getElementById('selfTickets').value) || 0;
+        const numRuns      = parseInt(document.getElementById('numRuns').value) || 1;
+        const itemName     = document.getElementById('itemName').value.trim() || 'Невідомо';
+        const lotResult    = document.getElementById('lotResult').value;
+
+        const perTicketPrice = totalSell / numTickets;
+        const hcReq          = calcHC(totalSell);
+        const hcCost         = hcReq * hcPrice;
+        const winChance      = numTickets > 0 ? selfT / numTickets : 0;
+        const grossRevenue   = totalSell;
+        const tax            = grossRevenue * 0.05;
+        const netRevenue     = grossRevenue - tax;
+        const selfTicketCost = selfT * perTicketPrice;
+        const totalOut       = itemPrice + selfTicketCost + hcCost;
+
+        const rebateRows = getRebateRows(perTicketPrice);
+        const rebateCost = rebateRows.reduce((s, r) => s + r.amount, 0);
+        const avgRebate  = rebateCost * winChance;
+
+        const losePL   = netRevenue - totalOut;
+        const winPL    = (netRevenue + itemPrice) - totalOut - rebateCost;
+        const avgItemWon = itemPrice * winChance;
+        const avgPL    = (netRevenue + avgItemWon - avgRebate) - totalOut;
+
+        let actualPL = null;
+        if (lotResult === 'win') actualPL = winPL;
+        else if (lotResult === 'lose') actualPL = losePL;
+
+        return {
+          itemName, itemPrice, totalSell, hcPrice, numTickets, selfT, numRuns, lotResult,
+          perTicketPrice, hcReq, hcCost, winChance, grossRevenue, tax, netRevenue,
+          selfTicketCost, totalOut, losePL, winPL, avgPL, avgItemWon, actualPL,
+          rebateRows, rebateCost, avgRebate
+        };
+      }
+
+      let rebateData = [];
+
+      function getRebateRows(perTicketPrice) {
+        return rebateData.map(r => ({
+          ...r,
+          amount: (r.tickets || 0) * (perTicketPrice || 0) * ((r.pct || 0) / 100)
+        }));
+      }
+
+      function addRebateRow() {
+        rebateData.push({nick: '', tickets: 0, pct: 100});
+        renderRebateTable();
+        calc();
+      }
+
+      function removeRebateRow(idx) {
+        rebateData.splice(idx, 1);
+        renderRebateTable();
+        calc();
+      }
+
+      function renderRebateTable() {
+        const ptPrice = (() => {
+          const ts = parseFloat(document.getElementById('totalSellValue').value) || 0;
+          const nt = parseInt(document.getElementById('numTickets').value) || 1;
+          return ts / nt;
+        })();
+        document.getElementById('rebateBody').innerHTML = rebateData.map((r, i) => {
+          const amt = r.tickets * ptPrice * (r.pct / 100);
+          return `<tr>
+            <td><input type="text" value="${r.nick}" placeholder="напр. PlayerName" oninput="rebateData[${i}].nick=this.value"></td>
+            <td><input type="number" value="${r.tickets}" min="0" style="width:90px" oninput="rebateData[${i}].tickets=+this.value;renderRebateTable();calc()"></td>
+            <td><input type="number" value="${r.pct}" min="0" max="100" style="width:80px" oninput="rebateData[${i}].pct=+this.value;renderRebateTable();calc()"></td>
+            <td class="rebate-amount">${amt > 0 ? fmt(amt) : '—'}</td>
+            <td><button class="btn-danger" onclick="removeRebateRow(${i})">&#x2715;</button></td>
+          </tr>`;
+        }).join('');
+        const total = rebateData.reduce((s, r) => {
+          return s + r.tickets * ptPrice * (r.pct / 100);
+        }, 0);
+        document.getElementById('rebateTotal').textContent =
+          rebateData.length > 0 ? `Загальний ребейт: ${fmt(total)}` : '';
+      }
+
+      function calc() {
+        const d = getCalcData();
+
+        const stats = [
+          {label: 'Ціна одного квитка',     val: fmt(d.perTicketPrice)},
+          {label: 'Потрібно HyperCores',    val: d.hcReq.toLocaleString()},
+          {label: `Вартість HC (${d.hcReq.toLocaleString()} × ${fmt(d.hcPrice)})`, val: fmt(d.hcCost)},
+          {label: 'Шанс виграшу',           val: pct(d.winChance)},
+          {label: 'Валовий дохід',          val: fmt(d.grossRevenue)},
+          {label: 'Податок (5%)',            val: fmt(d.tax)},
+          {label: 'Чистий дохід',           val: fmt(d.netRevenue)},
+          {label: 'Вартість власних квитків', val: fmt(d.selfTicketCost)},
+        ];
+
+        document.getElementById('statsGrid').innerHTML = stats.map(s =>
+          `<div class="stat-box"><div class="stat-label">${s.label}</div><div class="stat-val">${s.val}</div></div>`
+        ).join('');
+
+        const rows = [
+          {name: 'Якщо програєте', itemCost: d.itemPrice, selfT: d.selfTicketCost, hc: d.hcCost, rebate: 0,            totalOut: d.totalOut,                 netRev: d.netRevenue, itemWon: null,         totalIn: d.netRevenue,                pl: d.losePL},
+          {name: 'Якщо виграєте',  itemCost: d.itemPrice, selfT: d.selfTicketCost, hc: d.hcCost, rebate: d.rebateCost, totalOut: d.totalOut + d.rebateCost,   netRev: d.netRevenue, itemWon: d.itemPrice,  totalIn: d.netRevenue + d.itemPrice,  pl: d.winPL},
+          {name: 'Середнє',        itemCost: d.itemPrice, selfT: d.selfTicketCost, hc: d.hcCost, rebate: d.avgRebate,  totalOut: d.totalOut + d.avgRebate,    netRev: d.netRevenue, itemWon: d.avgItemWon, totalIn: d.netRevenue + d.avgItemWon, pl: d.avgPL},
+        ];
+
+        document.getElementById('resultBody').innerHTML = rows.map(r => {
+          const plClass = r.pl < 0 ? 'profit-neg' : 'profit-pos';
+          const plFmt = r.pl < 0
+            ? `<span class="${plClass} profit-neg-box">${fmt(r.pl)}</span>`
+            : `<span class="${plClass}">${fmt(r.pl)}</span>`;
+          const rebateCell = r.rebate > 0
+            ? `<span style="color:#ffaa44;">-${fmt(r.rebate)}</span>`
+            : `<span style="color:#555;">—</span>`;
+          return `<tr>
+            <td>${r.name}</td>
+            <td>${fmt(r.itemCost)}</td>
+            <td>${fmt(r.selfT)}</td>
+            <td>${fmt(r.hc)}</td>
+            <td>${rebateCell}</td>
+            <td>${fmt(r.totalOut)}</td>
+            <td>${fmt(r.netRev)}</td>
+            <td>${r.itemWon === null ? '—' : fmt(r.itemWon)}</td>
+            <td>${fmt(r.totalIn)}</td>
+            <td>${plFmt}</td>
+          </tr>`;
+        }).join('');
+
+        renderRebateTable();
+
+        const expWins    = d.numRuns * d.winChance;
+        const expLosses  = d.numRuns * (1 - d.winChance);
+        const totalInv   = d.totalOut * d.numRuns;
+        const totalProfit = d.avgPL * d.numRuns;
+        const roi        = totalInv > 0 ? (totalProfit / totalInv * 100) : 0;
+
+        const summary = [
+          {label: 'Очікувані виграші',        val: expWins.toFixed(2)},
+          {label: 'Очікувані програші',       val: expLosses.toFixed(2)},
+          {label: 'Загальні інвестиції',      val: fmt(totalInv)},
+          {label: 'Очікуваний прибуток',      val: fmt(totalProfit)},
+          {label: 'ROI %',                    val: roi.toFixed(2) + '%'},
+        ];
+
+        document.getElementById('summaryGrid').innerHTML = summary.map(s =>
+          `<div class="summary-box"><div class="s-label">${s.label}</div><div class="s-val">${s.val}</div></div>`
+        ).join('');
+      }
+
+      function getLots() {
+        try { return JSON.parse(localStorage.getItem('hypernet_lots') || '[]'); } catch { return []; }
+      }
+
+      function saveLots(lots) {
+        localStorage.setItem('hypernet_lots', JSON.stringify(lots));
+      }
+
+      function saveLot() {
+        const d = getCalcData();
+        const lot = {
+          id: Date.now(),
+          date: new Date().toISOString(),
+          itemName: d.itemName,
+          itemPrice: d.itemPrice,
+          totalSell: d.totalSell,
+          hcPrice: d.hcPrice,
+          numTickets: d.numTickets,
+          selfT: d.selfT,
+          numRuns: d.numRuns,
+          lotResult: d.lotResult,
+          winChance: d.winChance,
+          totalOut: d.totalOut,
+          netRevenue: d.netRevenue,
+          losePL: d.losePL,
+          winPL: d.winPL,
+          avgPL: d.avgPL,
+          actualPL: d.actualPL,
+          rebateRows: d.rebateRows,
+          rebateCost: d.rebateCost,
+        };
+        const lots = getLots();
+        lots.push(lot);
+        saveLots(lots);
+        showToast('Лот збережено!');
+      }
+
+      function deleteLot(id) {
+        const lots = getLots().filter(l => l.id !== id);
+        saveLots(lots);
+        renderStats();
+      }
+
+      let editingId = null;
+      let modalRebateData = [];
+
+      function renderModalRebateTable() {
+        document.getElementById('m_rebateBody').innerHTML = modalRebateData.map((r, i) =>
+          `<tr>
+            <td><input type="text" value="${r.nick||''}" placeholder="напр. PlayerName" oninput="modalRebateData[${i}].nick=this.value"></td>
+            <td><input type="number" value="${r.tickets||0}" min="0" style="width:80px" oninput="modalRebateData[${i}].tickets=+this.value"></td>
+            <td><input type="number" value="${r.pct||100}" min="0" max="100" style="width:70px" oninput="modalRebateData[${i}].pct=+this.value"></td>
+            <td><button class="btn-danger" onclick="removeModalRebateRow(${i})">&#x2715;</button></td>
+          </tr>`
+        ).join('');
+      }
+
+      function addModalRebateRow() {
+        modalRebateData.push({nick:'', tickets:0, pct:100});
+        renderModalRebateTable();
+      }
+
+      function removeModalRebateRow(idx) {
+        modalRebateData.splice(idx, 1);
+        renderModalRebateTable();
+      }
+
+      function openEditModal(id) {
+        const lot = getLots().find(l => l.id === id);
+        if (!lot) return;
+        editingId = id;
+        document.getElementById('m_itemName').value = lot.itemName || '';
+        document.getElementById('m_lotResult').value = lot.lotResult || 'none';
+        modalRebateData = (lot.rebateRows || []).map(r => ({nick: r.nick||'', tickets: r.tickets||0, pct: r.pct||100}));
+        renderModalRebateTable();
+        document.getElementById('editModal').classList.add('open');
+      }
+
+      function closeModal() {
+        document.getElementById('editModal').classList.remove('open');
+        editingId = null;
+        modalRebateData = [];
+      }
+
+      function saveModalEdit() {
+        if (!editingId) return;
+        const lots = getLots();
+        const idx = lots.findIndex(l => l.id === editingId);
+        if (idx === -1) return;
+        const newResult = document.getElementById('m_lotResult').value;
+        const newName   = document.getElementById('m_itemName').value.trim() || lots[idx].itemName;
+        const perTicketPrice = lots[idx].totalSell / lots[idx].numTickets;
+        const newRebateRows  = modalRebateData.map(r => ({
+          ...r,
+          amount: (r.tickets||0) * perTicketPrice * ((r.pct||0) / 100)
+        }));
+        const newRebateCost  = newRebateRows.reduce((s, r) => s + r.amount, 0);
+
+        lots[idx].itemName   = newName;
+        lots[idx].lotResult  = newResult;
+        lots[idx].rebateRows = newRebateRows;
+        lots[idx].rebateCost = newRebateCost;
+
+        const netRev = lots[idx].netRevenue;
+        const itemP  = lots[idx].itemPrice;
+        const totOut = lots[idx].totalOut;
+        lots[idx].winPL  = (netRev + itemP) - totOut - newRebateCost;
+        lots[idx].losePL = netRev - totOut;
+        const wc = lots[idx].winChance;
+        lots[idx].avgPL  = (netRev + itemP * wc - newRebateCost * wc) - totOut;
+
+        if (newResult === 'win')       lots[idx].actualPL = lots[idx].winPL;
+        else if (newResult === 'lose') lots[idx].actualPL = lots[idx].losePL;
+        else                           lots[idx].actualPL = null;
+
+        saveLots(lots);
+        closeModal();
+        renderStats();
+        showToast('Лот оновлено!');
+      }
+
+      document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+      });
+
+      let filterMode = 'all';
+
+      function setFilter(mode) {
+        filterMode = mode;
+        document.getElementById('btn-all').classList.toggle('active', mode === 'all');
+        document.getElementById('btn-month').classList.toggle('active', mode === 'month');
+        const mp = document.getElementById('month-picker');
+        mp.style.display = mode === 'month' ? 'flex' : 'none';
+        if (mode === 'month' && !document.getElementById('monthPicker').value) {
+          const now = new Date();
+          document.getElementById('monthPicker').value = now.toISOString().slice(0, 7);
+        }
+        renderStats();
+      }
+
+      function getFilteredLots() {
+        const lots = getLots();
+        if (filterMode === 'all') return lots;
+        const monthVal = document.getElementById('monthPicker').value;
+        if (!monthVal) return lots;
+        return lots.filter(l => l.date.startsWith(monthVal));
+      }
+
+      function renderStats() {
+        const lots = getFilteredLots();
+
+        const total    = lots.length;
+        const wins     = lots.filter(l => l.lotResult === 'win').length;
+        const losses   = lots.filter(l => l.lotResult === 'lose').length;
+        const pending  = lots.filter(l => l.lotResult === 'pending').length;
+        const unknown  = lots.filter(l => l.lotResult === 'none').length;
+        const totalPL  = lots.reduce((s, l) => s + (l.actualPL !== null ? l.actualPL : l.avgPL), 0);
+        const totalInv = lots.reduce((s, l) => s + l.totalOut * l.numRuns, 0);
+        const roi      = totalInv > 0 ? (totalPL / totalInv * 100) : 0;
+
+        const cards = [
+          {label: 'Лотів збережено',     val: total},
+          {label: 'Виграшів',            val: wins},
+          {label: 'Програшів',           val: losses},
+          {label: 'В очікуванні',        val: pending},
+          {label: 'Без результату',      val: unknown},
+          {label: 'Загальний P/L',       val: fmt(totalPL), color: totalPL >= 0 ? '#44ff88' : '#ff2222'},
+          {label: 'Загальні інвестиції', val: fmt(totalInv)},
+          {label: 'ROI %',               val: roi.toFixed(2) + '%', color: roi >= 0 ? '#44ff88' : '#ff2222'},
+        ];
+
+        document.getElementById('statSummaryCards').innerHTML = cards.map(c =>
+          `<div class="summary-box"><div class="s-label">${c.label}</div><div class="s-val" style="${c.color ? 'color:'+c.color : ''}">${c.val}</div></div>`
+        ).join('');
+
+        if (lots.length === 0) {
+          document.getElementById('lotsBody').innerHTML = `<tr><td colspan="10" class="empty-msg">Збережених лотів немає</td></tr>`;
+          return;
+        }
+
+        const rows = [...lots].reverse().map(l => {
+          const date = new Date(l.date).toLocaleString('uk-UA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+          const resultLabel = l.lotResult === 'win' ? '<span class="badge-win">Виграш</span>'
+                            : l.lotResult === 'lose' ? '<span class="badge-lose">Програш</span>'
+                            : l.lotResult === 'pending' ? '<span class="badge-pending">В очікуванні</span>'
+                            : '<span class="badge-avg">—</span>';
+          const pl = l.actualPL !== null ? l.actualPL : l.avgPL;
+          const plClass = pl >= 0 ? 'profit-pos' : 'profit-neg';
+          const plStr = l.actualPL !== null ? fmt(pl) : fmt(pl) + '*';
+          const rebateInfo = (l.rebateRows && l.rebateRows.length > 0)
+            ? l.rebateRows.map(r => `${r.nick || '?'}: ${r.tickets}×${r.pct}%`).join(', ')
+            : '—';
+          return `<tr>
+            <td>${date}</td>
+            <td>${l.itemName}</td>
+            <td>${l.numTickets}</td>
+            <td>${l.selfT}</td>
+            <td>${pct(l.winChance)}</td>
+            <td>${fmt(l.totalOut * l.numRuns)}</td>
+            <td>${fmt(l.netRevenue * l.numRuns)}</td>
+            <td style="color:#ffaa44;font-size:0.78rem;">${rebateInfo}</td>
+            <td>${resultLabel}</td>
+            <td class="${plClass}">${plStr}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn-edit" onclick="openEditModal(${l.id})">&#9998;</button>
+              <button class="btn-danger" style="margin-left:4px" onclick="deleteLot(${l.id})">&#x2715;</button>
+            </td>
+          </tr>`;
+        }).join('');
+
+        document.getElementById('lotsBody').innerHTML = rows
+          + `<tr class="total-row">
+              <td colspan="9">Разом (${lots.length} лот${lots.length === 1 ? '' : lots.length < 5 ? 'и' : 'ів'})</td>
+              <td class="${totalPL >= 0 ? 'profit-pos' : 'profit-neg'}">${fmt(totalPL)}</td>
+              <td></td>
+            </tr>`;
+      }
+
+      function switchTab(name) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        event.target.classList.add('active');
+        if (name === 'stats') renderStats();
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+      }
+
+      const ESI_BASE = 'https://esi.evetech.net/latest';
+      const JITA_REGION = 10000002;
+      const JITA_STATION = 60003760;
+
+      let jitaSearchTimer = null;
+      let jitaFoundTypeId = null;
+
+      function onItemNameInput() {
+        calc();
+        clearTimeout(jitaSearchTimer);
+        jitaFoundTypeId = null;
+        const val = document.getElementById('itemName').value.trim();
+        if (val.length < 3) {
+          document.getElementById('jitaStatus').textContent = '';
+          document.getElementById('jitaSuggestions').innerHTML = '';
+          return;
+        }
+        jitaSearchTimer = setTimeout(() => searchItemSuggestions(val), 400);
+      }
+
+      async function searchItemSuggestions(query) {
+        setJitaStatus('Пошук...', '#777');
+        try {
+          const res = await fetch(`${ESI_BASE}/search/?categories=inventory_type&search=${encodeURIComponent(query)}&strict=false&datasource=tranquility&language=en`);
+          if (!res.ok) throw new Error('ESI search failed');
+          const data = await res.json();
+          const ids = (data.inventory_type || []).slice(0, 8);
+          if (ids.length === 0) {
+            setJitaStatus('Предмет не знайдено', '#ff4444');
+            document.getElementById('jitaSuggestions').innerHTML = '';
+            return;
+          }
+          setJitaStatus(`Знайдено ${ids.length} варіантів — виберіть або натисніть «Jita ціна»`, '#777');
+
+          const namesRes = await fetch(`${ESI_BASE}/universe/names/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(ids)
+          });
+          const names = await namesRes.json();
+          renderSuggestions(names.filter(n => n.category === 'inventory_type'));
+        } catch (e) {
+          setJitaStatus('Помилка пошуку: ' + e.message, '#ff4444');
+        }
+      }
+
+      function renderSuggestions(items) {
+        const wrap = document.getElementById('jitaSuggestions');
+        if (items.length === 0) { wrap.innerHTML = ''; return; }
+        wrap.innerHTML = `<div style="
+          position:absolute; z-index:100; background:#1a0000; border:1px solid #550000;
+          border-radius:4px; margin-top:4px; min-width:280px; max-height:220px; overflow-y:auto;
+        ">` + items.map(it =>
+          `<div onclick="selectItem(${it.id}, '${it.name.replace(/'/g,"\\'")}') "
+            style="padding:9px 14px;cursor:pointer;color:#ff6666;font-size:0.85rem;border-bottom:1px solid #2a0000;"
+            onmouseover="this.style.background='#2a0000'" onmouseout="this.style.background=''"
+          >${it.name}</div>`
+        ).join('') + '</div>';
+      }
+
+      function selectItem(typeId, name) {
+        jitaFoundTypeId = typeId;
+        document.getElementById('itemName').value = name;
+        document.getElementById('jitaSuggestions').innerHTML = '';
+        setJitaStatus('Предмет вибрано. Натисніть «Jita ціна» для завантаження ціни.', '#ffaa44');
+        calc();
+      }
+
+      async function fetchJitaPrice() {
+        const name = document.getElementById('itemName').value.trim();
+        if (!name) { setJitaStatus('Введіть назву предмету', '#ff4444'); return; }
+
+        const btn = document.getElementById('jitaBtn');
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        try {
+          let typeId = jitaFoundTypeId;
+
+          if (!typeId) {
+            setJitaStatus('Пошук предмету...', '#777');
+            const res = await fetch(`${ESI_BASE}/search/?categories=inventory_type&search=${encodeURIComponent(name)}&strict=true&datasource=tranquility&language=en`);
+            const data = await res.json();
+            const ids = data.inventory_type || [];
+            if (ids.length === 0) {
+              setJitaStatus('Предмет не знайдено (спробуйте точну англійську назву)', '#ff4444');
+              return;
+            }
+            if (ids.length > 1) {
+              setJitaStatus(`Знайдено ${ids.length} варіантів — введіть точнішу назву або виберіть зі списку`, '#ffaa44');
+              const namesRes = await fetch(`${ESI_BASE}/universe/names/`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(ids.slice(0, 8))
+              });
+              const names = await namesRes.json();
+              renderSuggestions(names.filter(n => n.category === 'inventory_type'));
+              return;
+            }
+            typeId = ids[0];
+          }
+
+          setJitaStatus('Завантаження ціни з Jita 4-4...', '#777');
+          document.getElementById('jitaSuggestions').innerHTML = '';
+
+          const orders = await fetch(
+            `${ESI_BASE}/markets/${JITA_REGION}/orders/?order_type=sell&type_id=${typeId}&datasource=tranquility`
+          ).then(r => r.json());
+
+          const jitaOrders = orders.filter(o => o.location_id === JITA_STATION);
+
+          if (jitaOrders.length === 0) {
+            setJitaStatus('Немає ордерів на продаж у Jita 4-4', '#ffaa44');
+            return;
+          }
+
+          const lowestSell = Math.min(...jitaOrders.map(o => o.price));
+          document.getElementById('itemPrice').value = Math.round(lowestSell);
+          calc();
+
+          const fmtPrice = lowestSell >= 1e9
+            ? (lowestSell / 1e9).toFixed(2) + ' B ISK'
+            : lowestSell >= 1e6
+            ? (lowestSell / 1e6).toFixed(2) + ' M ISK'
+            : lowestSell.toLocaleString() + ' ISK';
+
+          setJitaStatus(`Jita sell: ${fmtPrice} (${jitaOrders.length} ордерів)`, '#44ff88');
+          jitaFoundTypeId = typeId;
+
+        } catch (e) {
+          setJitaStatus('Помилка: ' + e.message, '#ff4444');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Jita ціна';
+        }
+      }
+
+      function setJitaStatus(msg, color) {
+        const el = document.getElementById('jitaStatus');
+        el.textContent = msg;
+        el.style.color = color || '#777';
+      }
+
+      document.addEventListener('click', e => {
+        if (!e.target.closest('#jitaSuggestions') && !e.target.matches('#itemName')) {
+          document.getElementById('jitaSuggestions').innerHTML = '';
+        }
+      });
+
+      document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calc));
+      calc();
+
+      document.getElementById('monthPicker').value = new Date().toISOString().slice(0, 7);
+    </script>
+  </div>
+` }) %>

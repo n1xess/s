@@ -1,0 +1,1266 @@
+<%- include('layout', { title: 'Arbitrage Calculator', body: `
+  <div class="bg-zinc-900 rounded-3xl p-6 shadow-2xl">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #111111;
+        --bg-card: #1a1a1a;
+        --bg-input: #0d0d0d;
+        --accent: #00ff88;
+        --accent-hover: #00cc6a;
+        --accent-dim: rgba(0, 255, 136, 0.1);
+        --text-primary: #ffffff;
+        --text-secondary: #888888;
+        --danger: #ff4757;
+        --warning: #ffa502;
+        --border: #2a2a2a;
+        --gradient: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+      }
+
+      body {
+        font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+        background: var(--bg-primary);
+        min-height: 100vh;
+        color: var(--text-primary);
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 13px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 16px;
+        background: var(--bg-secondary);
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+        background: transparent;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .tab-btn.active {
+        background: var(--accent);
+        color: var(--bg-primary);
+      }
+
+      .tab-btn:hover:not(.active) {
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .tab-content {
+        display: none;
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .tab-content h2 {
+        font-size: 16px;
+        color: var(--accent);
+        margin-bottom: 16px;
+        font-weight: 600;
+      }
+
+      .calculator-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .input-group {
+        background: var(--bg-input);
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        transition: border-color 0.2s;
+      }
+
+      .input-group:focus-within {
+        border-color: var(--accent);
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-secondary);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .input-group input,
+      .input-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .input-group input:focus,
+      .input-group select:focus {
+        outline: none;
+      }
+
+      .input-group .hint {
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+
+      .results {
+        background: var(--accent-dim);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        margin-top: 16px;
+      }
+
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+      }
+
+      .result-row:last-child {
+        border-bottom: none;
+      }
+
+      .result-row.profit {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent);
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 2px solid var(--accent);
+      }
+
+      .result-row.loss {
+        color: var(--danger);
+      }
+
+      .result-label {
+        color: var(--text-secondary);
+      }
+
+      .result-value {
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary {
+        background: var(--gradient);
+        color: var(--bg-primary);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+      }
+
+      .btn-danger {
+        background: var(--bg-input);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+      }
+
+      .btn-danger:hover {
+        background: var(--danger);
+        color: var(--text-primary);
+      }
+
+      .btn-warning {
+        background: var(--bg-input);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+      }
+
+      .btn-warning:hover {
+        background: var(--warning);
+        color: var(--bg-primary);
+      }
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        background: var(--bg-input);
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+
+      .stat-card .label {
+        font-size: 10px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .stat-card .value {
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .stat-card .value.profit { color: var(--accent); }
+      .stat-card .value.avg { color: #00d9ff; }
+      .stat-card .value.total { color: var(--accent); }
+
+      .history-filters {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .history-filters .input-group {
+        flex: 1;
+      }
+
+      .history-filters .input-group:last-child {
+        flex: 0 0 140px;
+      }
+
+      .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .history-table th,
+      .history-table td {
+        padding: 10px 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .history-table th {
+        background: var(--bg-input);
+        color: var(--accent);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+      }
+
+      .history-table tr:hover {
+        background: var(--bg-input);
+      }
+
+      .badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .badge-dm { background: #ff6b35; color: #fff; }
+      .badge-steam { background: #171a21; color: #66c0f4; border: 1px solid #66c0f4; }
+      .badge-profit { background: var(--accent); color: var(--bg-primary); }
+      .badge-loss { background: var(--danger); color: #fff; }
+
+      .history-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .target-profit-input {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .target-profit-input input {
+        width: 70px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--bg-card);
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 450px;
+        width: 90%;
+        border: 1px solid var(--border);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-content h2 {
+        margin-bottom: 16px;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .modal-actions .btn {
+        flex: 1;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-secondary);
+      }
+
+      .add-manual-section {
+        background: var(--bg-input);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+      }
+
+      .add-manual-section h3 {
+        color: var(--accent);
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .manual-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 4px;
+      }
+
+      @media (max-width: 600px) {
+        .calculator-grid,
+        .settings-grid,
+        .stats-grid,
+        .manual-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .tabs {
+          flex-wrap: wrap;
+        }
+        
+        .history-table {
+          font-size: 11px;
+        }
+        
+        .history-table th,
+        .history-table td {
+          padding: 8px 4px;
+        }
+      }
+    </style>
+
+    <div class="container">
+      <header>
+        <h1>⚡ Arbitrage Calculator</h1>
+        <p class="subtitle">DMarket ↔ Steam Skin Trading</p>
+      </header>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="dm-steam">DM → Steam</button>
+        <button class="tab-btn" data-tab="steam-dm">Steam → DM</button>
+        <button class="tab-btn" data-tab="target">35% Калькулятор</button>
+        <button class="tab-btn" data-tab="history">Історія</button>
+        <button class="tab-btn" data-tab="settings">Налаштування</button>
+      </div>
+
+      <!-- DMarket → Steam -->
+      <div class="tab-content active" id="dm-steam">
+        <h2>📦 DMarket → Steam</h2>
+        <div class="calculator-grid">
+          <div class="input-group">
+            <label>💰 Купівля DM (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="dm-buy-price" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія DM (%)</label>
+            <input type="number" id="dm-fee" placeholder="5.0" step="0.1" min="0">
+            <div class="hint">Стандарт: 5%</div>
+          </div>
+          <div class="input-group">
+            <label>💵 Продаж Steam (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="steam-sell-price" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія Steam (%)</label>
+            <input type="number" id="steam-fee" placeholder="13.0" step="0.1" min="0">
+            <div class="hint">Стандарт: 13%</div>
+          </div>
+        </div>
+        <div class="results" id="dm-steam-results">
+          <div class="result-row">
+            <span class="result-label">Витрати на DM:</span>
+            <span class="result-value" id="dm-total-cost">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Комісія DM:</span>
+            <span class="result-value" id="dm-fee-amount">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Отримаєте на Steam:</span>
+            <span class="result-value" id="steam-gross">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Комісія Steam:</span>
+            <span class="result-value" id="steam-fee-amount">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Чистими:</span>
+            <span class="result-value" id="steam-net">₴0.00</span>
+          </div>
+          <div class="result-row profit" id="dm-steam-profit-row">
+            <span class="result-label">Профіт:</span>
+            <span class="result-value" id="dm-steam-profit">₴0.00 (0.00%)</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveOperation('dm-steam')">💾 Зберегти</button>
+      </div>
+
+      <!-- Steam → DMarket -->
+      <div class="tab-content" id="steam-dm">
+        <h2>📦 Steam → DMarket</h2>
+        <div class="calculator-grid">
+          <div class="input-group">
+            <label>💰 Купівля Steam (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="steam-buy-price" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія Steam (%)</label>
+            <input type="number" id="steam-buy-fee" placeholder="13.0" step="0.1" min="0">
+          </div>
+          <div class="input-group">
+            <label>💵 Продаж DM (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="dm-sell-price" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія DM (%)</label>
+            <input type="number" id="dm-sell-fee" placeholder="5.0" step="0.1" min="0">
+          </div>
+        </div>
+        <div class="results" id="steam-dm-results">
+          <div class="result-row">
+            <span class="result-label">Витрати на Steam:</span>
+            <span class="result-value" id="steam-total-cost">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Отримаєте на DM:</span>
+            <span class="result-value" id="dm-gross">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Комісія DM:</span>
+            <span class="result-value" id="dm-sell-fee-amount">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Чистими:</span>
+            <span class="result-value" id="dm-net">₴0.00</span>
+          </div>
+          <div class="result-row profit" id="steam-dm-profit-row">
+            <span class="result-label">Профіт:</span>
+            <span class="result-value" id="steam-dm-profit">₴0.00 (0.00%)</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveOperation('steam-dm')">💾 Зберегти</button>
+      </div>
+
+      <!-- Target Profit Calculator -->
+      <div class="tab-content" id="target">
+        <h2>🎯 Калькулятор 35% профіту</h2>
+        <div class="calculator-grid">
+          <div class="input-group">
+            <label>💰 Купівля (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="target-buy-price" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🎯 Профіт (%)</label>
+            <div class="target-profit-input">
+              <input type="number" id="target-profit-percent" placeholder="35" step="1" min="0" value="35">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>📍 Платформа</label>
+            <select id="target-platform" onchange="updateTargetFee()">
+              <option value="steam">Steam (13%)</option>
+              <option value="dmarket">DMarket (5%)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="results">
+          <div class="result-row">
+            <span class="result-label">Купівля:</span>
+            <span class="result-value" id="target-buy-display">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Бажаний профіт:</span>
+            <span class="result-value" id="target-profit-display">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Комісія:</span>
+            <span class="result-value" id="target-fee-display">₴0.00</span>
+          </div>
+          <div class="result-row profit">
+            <span class="result-label">🎯 Ціна продажу:</span>
+            <span class="result-value" id="target-sell-price">₴0.00</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Отримаєте:</span>
+            <span class="result-value" id="target-net">₴0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="tab-content" id="history">
+        <h2>📊 Історія операцій</h2>
+        
+        <!-- Add Manual Section -->
+        <div class="add-manual-section">
+          <h3>➕ Додати операцію вручну</h3>
+          <div class="manual-grid">
+            <div class="input-group">
+              <label>🎮 Назва скіна</label>
+              <input type="text" id="manual-skin-name" placeholder="AK-47 | Asiimov">
+            </div>
+            <div class="input-group">
+              <label>📍 Напрямок</label>
+              <select id="manual-type">
+                <option value="dm-steam">DM → Steam</option>
+                <option value="steam-dm">Steam → DM</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>💰 Купівля (<span class="currency-symbol">₴</span>)</label>
+              <input type="number" id="manual-buy" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="input-group">
+              <label>💵 Продаж (<span class="currency-symbol">₴</span>)</label>
+              <input type="number" id="manual-sell" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="input-group">
+              <label>🏷️ Комісія DM (%)</label>
+              <input type="number" id="manual-dm-fee" placeholder="5.0" step="0.1" min="0" value="5">
+            </div>
+            <div class="input-group">
+              <label>🏷️ Комісія Steam (%)</label>
+              <input type="number" id="manual-steam-fee" placeholder="13.0" step="0.1" min="0" value="13">
+            </div>
+            <div class="input-group full-width">
+              <button class="btn btn-primary" style="width: 100%;" onclick="addManualOperation()">➕ Додати в історію</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="history-filters">
+          <div class="input-group">
+            <input type="text" id="history-search" placeholder="🔍 Пошук скіна..." oninput="renderHistory()">
+          </div>
+          <div class="input-group">
+            <select id="history-period" onchange="renderHistory()">
+              <option value="all">Весь час</option>
+              <option value="7">7 днів</option>
+              <option value="30">30 днів</option>
+              <option value="90">90 днів</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">Всього</div>
+            <div class="value total" id="stats-total">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Профіт</div>
+            <div class="value profit" id="stats-profit">₴0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Середній</div>
+            <div class="value avg" id="stats-avg">₴0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Успіх / Збиток</div>
+            <div class="value" id="stats-ratio">0 / 0</div>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Напрям</th>
+                <th>Скін</th>
+                <th>Купівля</th>
+                <th>Продаж</th>
+                <th>Профіт</th>
+                <th>Дії</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr>
+                <td colspan="7" class="empty-state">
+                  <div>📭</div>
+                  <div>Історія порожня</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="history-actions">
+          <button class="btn btn-danger btn-small" onclick="clearHistory()">🗑️ Очистити</button>
+          <button class="btn btn-primary btn-small" onclick="exportHistory()">📥 Експорт</button>
+          <button class="btn btn-primary btn-small" onclick="document.getElementById('import-file').click()">📤 Імпорт</button>
+          <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importHistory(this)">
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="tab-content" id="settings">
+        <h2>⚙️ Налаштування</h2>
+        
+        <div class="settings-grid">
+          <div class="input-group">
+            <label>Комісія DMarket (%)</label>
+            <input type="number" id="setting-dm-fee" value="5" step="0.1" min="0">
+          </div>
+          <div class="input-group">
+            <label>Комісія Steam (%)</label>
+            <input type="number" id="setting-steam-fee" value="13" step="0.1" min="0">
+          </div>
+          <div class="input-group">
+            <label>Профіт за замовчуванням (%)</label>
+            <input type="number" id="setting-target-profit" value="35" step="1" min="0">
+          </div>
+          <div class="input-group">
+            <label>Валюта</label>
+            <select id="setting-currency" onchange="updateCurrency()">
+              <option value="UAH">₴ UAH</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Зберегти</button>
+      </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="save-modal">
+      <div class="modal-content">
+        <h2>💾 Зберегти операцію</h2>
+        <div class="input-group" style="margin-bottom: 16px;">
+          <label>🎮 Назва скіна</label>
+          <input type="text" id="save-skin-name" placeholder="AK-47 | Asiimov">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="confirmSave()">Зберегти</button>
+          <button class="btn btn-danger" onclick="closeModal()">Скасувати</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="edit-modal">
+      <div class="modal-content">
+        <h2>✏️ Редагувати операцію</h2>
+        <div class="manual-grid">
+          <div class="input-group full-width">
+            <label>🎮 Назва скіна</label>
+            <input type="text" id="edit-skin-name">
+          </div>
+          <div class="input-group">
+            <label>📍 Напрямок</label>
+            <select id="edit-type">
+              <option value="dm-steam">DM → Steam</option>
+              <option value="steam-dm">Steam → DM</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>📅 Дата</label>
+            <input type="datetime-local" id="edit-date">
+          </div>
+          <div class="input-group">
+            <label>💰 Купівля (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="edit-buy" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>💵 Продаж (<span class="currency-symbol">₴</span>)</label>
+            <input type="number" id="edit-sell" step="0.01" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія DM (%)</label>
+            <input type="number" id="edit-dm-fee" step="0.1" min="0">
+          </div>
+          <div class="input-group">
+            <label>🏷️ Комісія Steam (%)</label>
+            <input type="number" id="edit-steam-fee" step="0.1" min="0">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="confirmEdit()">💾 Зберегти</button>
+          <button class="btn btn-danger" onclick="closeEditModal()">Скасувати</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentTab = 'dm-steam';
+      let operations = JSON.parse(localStorage.getItem('arbitrage_operations')) || [];
+      let settings = JSON.parse(localStorage.getItem('arbitrage_settings')) || {
+        dmFee: 5,
+        steamFee: 13,
+        targetProfit: 35,
+        currency: 'UAH'
+      };
+      let editOperationId = null;
+
+      const currencySymbols = {
+        'UAH': '₴',
+        'USD': '$',
+        'EUR': '€'
+      };
+
+      function initTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+            currentTab = btn.dataset.tab;
+          });
+        });
+      }
+
+      function initCalculators() {
+        ['dm-buy-price', 'dm-fee', 'steam-sell-price', 'steam-fee'].forEach(id => {
+          document.getElementById(id).addEventListener('input', calculateDmSteam);
+        });
+
+        ['steam-buy-price', 'steam-buy-fee', 'dm-sell-price', 'dm-sell-fee'].forEach(id => {
+          document.getElementById(id).addEventListener('input', calculateSteamDm);
+        });
+
+        ['target-buy-price', 'target-profit-percent', 'target-platform'].forEach(id => {
+          document.getElementById(id).addEventListener('input', calculateTarget);
+        });
+      }
+
+      function loadSettings() {
+        document.getElementById('setting-dm-fee').value = settings.dmFee;
+        document.getElementById('setting-steam-fee').value = settings.steamFee;
+        document.getElementById('setting-target-profit').value = settings.targetProfit;
+        document.getElementById('setting-currency').value = settings.currency;
+        
+        document.getElementById('dm-fee').value = settings.dmFee;
+        document.getElementById('steam-fee').value = settings.steamFee;
+        document.getElementById('steam-buy-fee').value = settings.steamFee;
+        document.getElementById('dm-sell-fee').value = settings.dmFee;
+        document.getElementById('target-profit-percent').value = settings.targetProfit;
+        
+        updateTargetFee();
+      }
+
+      function saveSettings() {
+        settings.dmFee = parseFloat(document.getElementById('setting-dm-fee').value) || 5;
+        settings.steamFee = parseFloat(document.getElementById('setting-steam-fee').value) || 13;
+        settings.targetProfit = parseFloat(document.getElementById('setting-target-profit').value) || 35;
+        settings.currency = document.getElementById('setting-currency').value;
+        
+        localStorage.setItem('arbitrage_settings', JSON.stringify(settings));
+        updateCurrency();
+        alert('✅ Налаштування збережено!');
+      }
+
+      function updateCurrency() {
+        const currency = document.getElementById('setting-currency').value;
+        const symbol = currencySymbols[currency];
+        
+        document.querySelectorAll('.currency-symbol').forEach(el => {
+          el.textContent = symbol;
+        });
+        
+        document.querySelectorAll('.result-value').forEach(el => {
+          el.textContent = el.textContent.replace(/^[₴$€]/, symbol);
+        });
+        
+        document.getElementById('stats-profit').textContent = symbol + '0.00';
+        document.getElementById('stats-avg').textContent = symbol + '0.00';
+        
+        calculateTarget();
+        renderHistory();
+      }
+
+      function updateTargetFee() {
+        const platform = document.getElementById('target-platform').value;
+        const fee = platform === 'steam' ? settings.steamFee : settings.dmFee;
+        document.getElementById('target-fee').value = fee;
+        calculateTarget();
+      }
+
+      function calculateDmSteam() {
+        const buyPrice = parseFloat(document.getElementById('dm-buy-price').value) || 0;
+        const dmFeePercent = parseFloat(document.getElementById('dm-fee').value) || 0;
+        const sellPrice = parseFloat(document.getElementById('steam-sell-price').value) || 0;
+        const steamFeePercent = parseFloat(document.getElementById('steam-fee').value) || 0;
+
+        const dmFeeAmount = buyPrice * (dmFeePercent / 100);
+        const totalCost = buyPrice + dmFeeAmount;
+        const steamFeeAmount = sellPrice * (steamFeePercent / 100);
+        const netReceive = sellPrice - steamFeeAmount;
+        const profit = netReceive - totalCost;
+        const profitPercent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+
+        const symbol = currencySymbols[settings.currency];
+        document.getElementById('dm-total-cost').textContent = symbol + totalCost.toFixed(2);
+        document.getElementById('dm-fee-amount').textContent = symbol + dmFeeAmount.toFixed(2);
+        document.getElementById('steam-gross').textContent = symbol + sellPrice.toFixed(2);
+        document.getElementById('steam-fee-amount').textContent = symbol + steamFeeAmount.toFixed(2);
+        document.getElementById('steam-net').textContent = symbol + netReceive.toFixed(2);
+        
+        const profitEl = document.getElementById('dm-steam-profit');
+        const profitRow = document.getElementById('dm-steam-profit-row');
+        profitEl.textContent = `${symbol}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`;
+        
+        profitRow.classList.remove('loss');
+        if (profit < 0) {
+          profitRow.classList.add('loss');
+          profitEl.style.color = 'var(--danger)';
+        } else {
+          profitEl.style.color = 'var(--accent)';
+        }
+      }
+
+      function calculateSteamDm() {
+        const buyPrice = parseFloat(document.getElementById('steam-buy-price').value) || 0;
+        const sellPrice = parseFloat(document.getElementById('dm-sell-price').value) || 0;
+        const dmFeePercent = parseFloat(document.getElementById('dm-sell-fee').value) || 0;
+
+        const dmFeeAmount = sellPrice * (dmFeePercent / 100);
+        const netReceive = sellPrice - dmFeeAmount;
+        const profit = netReceive - buyPrice;
+        const profitPercent = buyPrice > 0 ? (profit / buyPrice) * 100 : 0;
+
+        const symbol = currencySymbols[settings.currency];
+        document.getElementById('steam-total-cost').textContent = symbol + buyPrice.toFixed(2);
+        document.getElementById('dm-gross').textContent = symbol + sellPrice.toFixed(2);
+        document.getElementById('dm-sell-fee-amount').textContent = symbol + dmFeeAmount.toFixed(2);
+        document.getElementById('dm-net').textContent = symbol + netReceive.toFixed(2);
+        
+        const profitEl = document.getElementById('steam-dm-profit');
+        const profitRow = document.getElementById('steam-dm-profit-row');
+        profitEl.textContent = `${symbol}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`;
+        
+        profitRow.classList.remove('loss');
+        if (profit < 0) {
+          profitRow.classList.add('loss');
+          profitEl.style.color = 'var(--danger)';
+        } else {
+          profitEl.style.color = 'var(--accent)';
+        }
+      }
+
+      function calculateTarget() {
+        const buyPrice = parseFloat(document.getElementById('target-buy-price').value) || 0;
+        const targetProfitPercent = parseFloat(document.getElementById('target-profit-percent').value) || 35;
+        const platform = document.getElementById('target-platform').value;
+        const platformFeePercent = platform === 'steam' ? settings.steamFee : settings.dmFee;
+
+        const targetProfit = buyPrice * (targetProfitPercent / 100);
+        const neededNet = buyPrice + targetProfit;
+        
+        const sellPrice = neededNet / (1 - platformFeePercent / 100);
+        const feeAmount = sellPrice * (platformFeePercent / 100);
+
+        const symbol = currencySymbols[settings.currency];
+        document.getElementById('target-buy-display').textContent = symbol + buyPrice.toFixed(2);
+        document.getElementById('target-profit-display').textContent = symbol + targetProfit.toFixed(2);
+        document.getElementById('target-fee-display').textContent = symbol + feeAmount.toFixed(2);
+        document.getElementById('target-sell-price').textContent = symbol + sellPrice.toFixed(2);
+        document.getElementById('target-net').textContent = symbol + neededNet.toFixed(2);
+      }
+
+      let pendingOperation = null;
+
+      function saveOperation(type) {
+        if (type === 'dm-steam') {
+          const buyPrice = parseFloat(document.getElementById('dm-buy-price').value) || 0;
+          const sellPrice = parseFloat(document.getElementById('steam-sell-price').value) || 0;
+          if (buyPrice === 0 && sellPrice === 0) {
+            alert('Введіть дані для збереження!');
+            return;
+          }
+          pendingOperation = { type: 'DM → Steam', buy: buyPrice, sell: sellPrice };
+        } else {
+          const buyPrice = parseFloat(document.getElementById('steam-buy-price').value) || 0;
+          const sellPrice = parseFloat(document.getElementById('dm-sell-price').value) || 0;
+          if (buyPrice === 0 && sellPrice === 0) {
+            alert('Введіть дані для збереження!');
+            return;
+          }
+          pendingOperation = { type: 'Steam → DM', buy: buyPrice, sell: sellPrice };
+        }
+        
+        document.getElementById('save-modal').classList.add('active');
+        document.getElementById('save-skin-name').focus();
+      }
+
+      function closeModal() {
+        document.getElementById('save-modal').classList.remove('active');
+        document.getElementById('save-skin-name').value = '';
+        pendingOperation = null;
+      }
+
+      function confirmSave() {
+        const skinName = document.getElementById('save-skin-name').value.trim() || 'Без назви';
+        const type = currentTab === 'dm-steam' ? 'dm-steam' : 'steam-dm';
+        
+        const operation = {
+          id: Date.now(),
+          date: new Date().toISOString(),
+          skinName,
+          type: type,
+          ...pendingOperation,
+          dmFee: parseFloat(document.getElementById(type === 'dm-steam' ? 'dm-fee' : 'dm-sell-fee').value) || 0,
+          steamFee: parseFloat(document.getElementById(type === 'dm-steam' ? 'steam-fee' : 'steam-buy-fee').value) || 0,
+          profit: calculateProfit(type, pendingOperation.buy, pendingOperation.sell, 
+            type === 'dm-steam' ? (parseFloat(document.getElementById('dm-fee').value) || 0) : (parseFloat(document.getElementById('dm-sell-fee').value) || 0),
+            type === 'dm-steam' ? (parseFloat(document.getElementById('steam-fee').value) || 0) : 0
+          )
+        };
+
+        operations.unshift(operation);
+        localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+        renderHistory();
+        closeModal();
+        alert('✅ Операцію збережено!');
+      }
+
+      function addManualOperation() {
+        const skinName = document.getElementById('manual-skin-name').value.trim() || 'Без назви';
+        const type = document.getElementById('manual-type').value;
+        const buy = parseFloat(document.getElementById('manual-buy').value) || 0;
+        const sell = parseFloat(document.getElementById('manual-sell').value) || 0;
+        const dmFee = parseFloat(document.getElementById('manual-dm-fee').value) || 5;
+        const steamFee = parseFloat(document.getElementById('manual-steam-fee').value) || 13;
+
+        if (buy === 0 && sell === 0) {
+          alert('Введіть ціну купівлі або продажу!');
+          return;
+        }
+
+        const operation = {
+          id: Date.now(),
+          date: new Date().toISOString(),
+          skinName,
+          type: type,
+          buy: buy,
+          sell: sell,
+          dmFee: dmFee,
+          steamFee: steamFee,
+          profit: calculateProfit(type, buy, sell, dmFee, steamFee)
+        };
+
+        operations.unshift(operation);
+        localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+        renderHistory();
+        
+        document.getElementById('manual-skin-name').value = '';
+        document.getElementById('manual-buy').value = '';
+        document.getElementById('manual-sell').value = '';
+        
+        alert('✅ Операцію додано!');
+      }
+
+      function calculateProfit(type, buy, sell, dmFee, steamFee) {
+        if (type === 'dm-steam') {
+          const totalCost = buy * (1 + dmFee / 100);
+          const netReceive = sell * (1 - steamFee / 100);
+          return netReceive - totalCost;
+        } else {
+          const dmFeeAmount = sell * (dmFee / 100);
+          const netReceive = sell - dmFeeAmount;
+          return netReceive - buy;
+        }
+      }
+
+      function openEditModal(id) {
+        const operation = operations.find(op => op.id === id);
+        if (!operation) return;
+
+        editOperationId = id;
+        
+        document.getElementById('edit-skin-name').value = operation.skinName;
+        document.getElementById('edit-type').value = operation.type;
+        document.getElementById('edit-date').value = operation.date.slice(0, 16);
+        document.getElementById('edit-buy').value = operation.buy;
+        document.getElementById('edit-sell').value = operation.sell;
+        document.getElementById('edit-dm-fee').value = operation.dmFee;
+        document.getElementById('edit-steam-fee').value = operation.steamFee;
+        
+        document.getElementById('edit-modal').classList.add('active');
+      }
+
+      function closeEditModal() {
+        document.getElementById('edit-modal').classList.remove('active');
+        editOperationId = null;
+      }
+
+      function confirmEdit() {
+        if (!editOperationId) return;
+
+        const operation = operations.find(op => op.id === editOperationId);
+        if (!operation) return;
+
+        const type = document.getElementById('edit-type').value;
+        const buy = parseFloat(document.getElementById('edit-buy').value) || 0;
+        const sell = parseFloat(document.getElementById('edit-sell').value) || 0;
+        const dmFee = parseFloat(document.getElementById('edit-dm-fee').value) || 5;
+        const steamFee = parseFloat(document.getElementById('edit-steam-fee').value) || 13;
+
+        operation.skinName = document.getElementById('edit-skin-name').value.trim() || 'Без назви';
+        operation.type = type;
+        operation.date = new Date(document.getElementById('edit-date').value).toISOString();
+        operation.buy = buy;
+        operation.sell = sell;
+        operation.dmFee = dmFee;
+        operation.steamFee = steamFee;
+        operation.profit = calculateProfit(type, buy, sell, dmFee, steamFee);
+
+        localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+        renderHistory();
+        closeEditModal();
+        alert('✅ Операцію оновлено!');
+      }
+
+      function renderHistory() {
+        const search = document.getElementById('history-search').value.toLowerCase();
+        const period = document.getElementById('history-period').value;
+        const now = Date.now();
+        const periodMs = period === 'all' ? Infinity : parseInt(period) * 24 * 60 * 60 * 1000;
+
+        let filtered = operations.filter(op => {
+          const matchSearch = op.skinName.toLowerCase().includes(search);
+          const matchPeriod = period === 'all' || (now - new Date(op.date).getTime()) < periodMs;
+          return matchSearch && matchPeriod;
+        });
+
+        const totalProfit = filtered.reduce((sum, op) => sum + op.profit, 0);
+        const profitable = filtered.filter(op => op.profit > 0).length;
+        const loss = filtered.filter(op => op.profit < 0).length;
+        const avgProfit = filtered.length > 0 ? totalProfit / filtered.length : 0;
+
+        const symbol = currencySymbols[settings.currency];
+
+        document.getElementById('stats-total').textContent = filtered.length;
+        document.getElementById('stats-profit').textContent = symbol + totalProfit.toFixed(2);
+        document.getElementById('stats-avg').textContent = symbol + avgProfit.toFixed(2);
+        document.getElementById('stats-ratio').textContent = `${profitable} / ${loss}`;
+
+        const tbody = document.getElementById('history-body');
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div>📭</div><div>Історія порожня</div></td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(op => {
+          const date = new Date(op.date).toLocaleDateString('uk-UA');
+          const profitClass = op.profit >= 0 ? 'badge-profit' : 'badge-loss';
+          const profitColor = op.profit >= 0 ? 'var(--accent)' : 'var(--danger)';
+          const directionBadge = op.type === 'dm-steam' ? 'badge-dm' : 'badge-steam';
+          const directionText = op.type === 'dm-steam' ? 'DM→S' : 'S→DM';
+
+          return `
+            <tr>
+              <td>${date}</td>
+              <td><span class="badge ${directionBadge}">${directionText}</span></td>
+              <td>${escapeHtml(op.skinName)}</td>
+              <td>${symbol}${op.buy.toFixed(2)}</td>
+              <td>${symbol}${op.sell.toFixed(2)}</td>
+              <td style="color: ${profitColor}; font-weight: 600;">${symbol}${op.profit.toFixed(2)}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-warning btn-small" onclick="openEditModal(${op.id})">✏️</button>
+                  <button class="btn btn-danger btn-small" onclick="deleteOperation(${op.id})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function deleteOperation(id) {
+        if (confirm('Видалити цю операцію?')) {
+          operations = operations.filter(op => op.id !== id);
+          localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+          renderHistory();
+        }
+      }
+
+      function clearHistory() {
+        if (confirm('Ви впевнені? Це видалить всю історію!')) {
+          operations = [];
+          localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+          renderHistory();
+        }
+      }
+
+      function exportHistory() {
+        const data = JSON.stringify(operations, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `arbitrage_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function importHistory(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+              operations = [...imported, ...operations];
+              localStorage.setItem('arbitrage_operations', JSON.stringify(operations));
+              renderHistory();
+              alert('✅ Імпорт успішний!');
+            }
+          } catch (err) {
+            alert('❌ Помилка імпорту');
+          }
+        };
+        reader.readAsText(file);
+        input.value = '';
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Initialize everything
+      initTabs();
+      initCalculators();
+      loadSettings();
+      updateCurrency();
+      renderHistory();
+    </script>
+  </div>
+` }) %>
