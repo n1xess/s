@@ -11,12 +11,12 @@ const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'change-this-secret-2026',
+  secret: process.env.SESSION_SECRET || 'my-tools-hub-2026-secret',
   resave: false,
   saveUninitialized: false,
   store: new SQLiteStore({ db: 'sessions.db' }),
@@ -26,12 +26,15 @@ app.use(session({
 const db = new sqlite3.Database('tools.db');
 
 db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)`);
-  db.run(`CREATE TABLE IF NOT EXISTS hypernet_lots (id INTEGER PRIMARY KEY, user_id INTEGER, data TEXT)`);
-  db.run(`CREATE TABLE IF NOT EXISTS arbitrage_ops (id INTEGER PRIMARY KEY, user_id INTEGER, data TEXT)`);
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  )`);
 });
 
-// Routes
+// ====================== РОУТИ ======================
+
 app.get('/', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.render('index', { user: req.session.user });
@@ -44,7 +47,7 @@ app.post('/register', (req, res) => {
   const { username, password } = req.body;
   const hashed = bcrypt.hashSync(password, 10);
   db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashed], (err) => {
-    if (err) return res.render('register', { error: 'Користувач вже існує' });
+    if (err) return res.render('register', { error: 'Такий користувач вже існує' });
     res.redirect('/login');
   });
 });
@@ -64,7 +67,7 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login'));
 });
 
-// Інструменти (поки що заглушки — вставиш свої HTML пізніше)
+// === Твої інструменти ===
 app.get('/hypernet', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.render('hypernet', { user: req.session.user });
@@ -75,4 +78,6 @@ app.get('/arbitrage', (req, res) => {
   res.render('arbitrage', { user: req.session.user });
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Сервер запущено на порту ${PORT}`);
+});
