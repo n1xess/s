@@ -1,5 +1,5 @@
-<%- include('layout', { title: 'Arbitrage Calculator', body: `
-  <div class="bg-zinc-900 rounded-3xl p-6 shadow-2xl">
+<%- include('layout', { title: 'Arbitrage Calculator - DMarket ↔ Steam', body: `
+  <div class="bg-zinc-900 rounded-3xl p-6 md:p-10">
     <style>
       * {
         margin: 0;
@@ -815,6 +815,7 @@
     </div>
 
     <script>
+      // State
       let currentTab = 'dm-steam';
       let operations = JSON.parse(localStorage.getItem('arbitrage_operations')) || [];
       let settings = JSON.parse(localStorage.getItem('arbitrage_settings')) || {
@@ -831,6 +832,16 @@
         'EUR': '€'
       };
 
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        initTabs();
+        initCalculators();
+        loadSettings();
+        updateCurrency();
+        renderHistory();
+      });
+
+      // Tabs
       function initTabs() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -843,6 +854,7 @@
         });
       }
 
+      // Calculators
       function initCalculators() {
         ['dm-buy-price', 'dm-fee', 'steam-sell-price', 'steam-fee'].forEach(id => {
           document.getElementById(id).addEventListener('input', calculateDmSteam);
@@ -909,6 +921,7 @@
         calculateTarget();
       }
 
+      // Calculation Functions
       function calculateDmSteam() {
         const buyPrice = parseFloat(document.getElementById('dm-buy-price').value) || 0;
         const dmFeePercent = parseFloat(document.getElementById('dm-fee').value) || 0;
@@ -991,6 +1004,7 @@
         document.getElementById('target-net').textContent = symbol + neededNet.toFixed(2);
       }
 
+      // Save Operation
       let pendingOperation = null;
 
       function saveOperation(type) {
@@ -1095,6 +1109,7 @@
         }
       }
 
+      // Edit Operation
       function openEditModal(id) {
         const operation = operations.find(op => op.id === id);
         if (!operation) return;
@@ -1144,6 +1159,7 @@
         alert('✅ Операцію оновлено!');
       }
 
+      // History
       function renderHistory() {
         const search = document.getElementById('history-search').value.toLowerCase();
         const period = document.getElementById('history-period').value;
@@ -1254,13 +1270,6 @@
         div.textContent = text;
         return div.innerHTML;
       }
-
-      // Initialize everything
-      initTabs();
-      initCalculators();
-      loadSettings();
-      updateCurrency();
-      renderHistory();
     </script>
   </div>
 ` }) %>
